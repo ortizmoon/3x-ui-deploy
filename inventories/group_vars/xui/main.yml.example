@@ -7,3 +7,13 @@ vless_fake_domain: "fake_domain.com"       ## Ex. mail.ru, vk.com
 ## S3
 r2_bucket: your_backet_name
 r2_endpoint: "https://xxxxxxxxxxxxxxxxxxxxxx.r2.cloudflarestorage.com"
+
+# Firewall
+firewall_rules:
+  - port: 22
+    proto: tcp
+    comment: ssh
+
+  - port: 443
+    proto: tcp
+    comment: haproxy

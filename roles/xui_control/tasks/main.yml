@@ -14,3 +14,7 @@
 - name: Add backup service
   ansible.builtin.include_tasks: add_backup_service.yml
   when: xui_control_add_backup_service | default(false) | bool
+
+- name: Add backup service
+  ansible.builtin.include_tasks: set_firewall.yml
+  when: xui_control_set_firewall | default(false) | bool

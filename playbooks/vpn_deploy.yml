@@ -6,7 +6,8 @@
   roles:
     - role: xui_control
       vars:
-        xui_control_deploy_cert: true
+        xui_control_deploy_cert: false
         xui_control_restore_db: false
-        xui_control_install_3xui: true
-        xui_control_add_backup_service: true
+        xui_control_install_3xui: false
+        xui_control_add_backup_service: false
+        xui_control_set_firewall: true
