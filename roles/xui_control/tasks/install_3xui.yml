@@ -32,4 +32,3 @@
     creates: /usr/local/x-ui
   changed_when: true
   notify: Restart haproxy service
-  

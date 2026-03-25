@@ -1,26 +1,31 @@
-- name: Install nftables
-  become: true
-  package:
-    name: nftables
+---
+- name: Install ufw
+  ansible.builtin.package:
+    name: ufw
     state: present
 
-- name: Deploy nftables config
-  become: true
-  template:
-    src: nftables.conf.j2
-    dest: /etc/nftables.conf
-    owner: root
-    group: root
-    mode: "0644"
+- name: Reset ufw to defaults
+  community.general.ufw:
+    state: reset
 
-- name: Validate nftables config
-  become: true
-  command: nft -c -f /etc/nftables.conf
-  changed_when: false
+- name: Set default incoming policy deny
+  community.general.ufw:
+    policy: deny
+    direction: incoming
 
-- name: Enable and restart nftables
-  become: true
-  service:
-    name: nftables
-    enabled: true
-    state: restarted
+- name: Set default outgoing policy allow
+  community.general.ufw:
+    policy: allow
+    direction: outgoing
+
+- name: Allow firewall rules
+  community.general.ufw:
+    rule: allow
+    port: "{{ item.port }}"
+    proto: "{{ item.proto }}"
+    comment: "{{ item.comment }}"
+  loop: "{{ firewall_rules }}"
+
+- name: Enable ufw
+  community.general.ufw:
+    state: enabled
