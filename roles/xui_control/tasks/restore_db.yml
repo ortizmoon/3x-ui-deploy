@@ -1,10 +1,4 @@
 ---
-- name: Install Python boto3
-  ansible.builtin.package:
-    name: python3-boto3
-    state: present
-    update_cache: true
-
 - name: Stop x-ui service before restore
   ansible.builtin.service:
     name: "{{ xui_control_xui_service }}"
