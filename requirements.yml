@@ -1,10 +1,13 @@
 ---
 collections:
   - name: community.general
-    version: "*"
+    version: ">=12.4.0"
 
   - name: amazon.aws
-    version: ">=6.0.0"
+    version: ">=11.2.0"
 
   - name: community.crypto
-    version: "*"
+    version: ">=3.1.1"
+
+  - name: ansible.posix
+    version: ">=2.1.0"

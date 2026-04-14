@@ -1,4 +1,4 @@
-# Ansible-проект для автоматического развёртывания VLESS VPN на вашей VPS.
+# Ansible-проект для автоматического развёртывания, или быстрой миграции, VLESS VPN-сервера.
 ---
 <p align="center">
   <img src="https://img.shields.io/badge/Ansible-automation-EE0000?style=for-the-badge&logo=ansible">
@@ -11,13 +11,20 @@
 
 
 
-Устанавливает [3X-UI](https://github.com/mhsanaei/3x-ui) за HAProxy L4 балансировщиком,<br> выпускает wildcard TLS-сертификаты через Certbot + Cloudflare DNS-01,<br> настраивает автоматический бэкап базы данных в Cloudflare R2-бакет.
+Устанавливает [3X-UI](https://github.com/mhsanaei/3x-ui) за HAProxy L4 балансировщиком,<br> выпускает wildcard TLS-сертификаты через Certbot + Cloudflare DNS-01,<br> настраивает автоматический бэкап базы данных в Cloudflare R2-бакет, настраивает файервол.
+<br>
+---
+Если у вас уже есть свой ансибл-проект, можно просто установить роль отдельно:
+```
+ansible-galaxy role install ortizmoon.xui_control
+```
+
 ---
 ### Перед запуском роли, уже должно быть:
-- Настроен рут-доступ по ssh, к нужной VPS
+- Домен управляется через Claudflare
+- Настроен рут-доступ по ssh, к вашей VPS
 - Создан Cloudflare R2-бакет + S3-ключи
-- Куплен домен у Cloudflare
-- Сгенерирован api-токен для купленного домена, с правами `Zone:DNS:Edit`
+- Сгенерирован api-токен для управляемого домена, с правами `Zone:DNS:Edit`
 <br>
 <br>
 
@@ -32,7 +39,7 @@ ssh_domain` --> sshd :22
 ```
 <br>
 
-Предполагается, что, по итогу, сервер наружу будет открыт только по порту **443**.<br>
+После выполнения роли, сервер будет открыт наружу только на порту **443**.<br>
 Поэтому для подключения по ssh, на клиенте рекомендуется настроить примерно такой алиас:
 ```
 host vps
@@ -85,27 +92,27 @@ cp inventories/group_vars/xui/creds.yml.example inventories/group_vars/xui/creds
 
 
 
-### Запуск роли
-
-```bash
-ansible-playbook playbooks/vpn_deploy.yml
-```
-
-
-## Playbook флаги
+### Playbook флаги
 
 В `playbooks/vpn_deploy.yml` управляются через vars роли:
 
 ```yaml
 xui_control_deploy_cert: true         # Создать DNS-записи + выпустить wildcard TLS-сертификат
 xui_control_install_3xui: true        # Установить haproxy + 3X-UI
-xui_control_restore_db: false         # Восстановить БД из R2 (используется при миграции)
+xui_control_restore_db: true         # Восстановить БД из R2 (true только при миграции на другую vps)
 xui_control_add_backup_service: true  # Задеплоить службу в виде скрипта для бэкапа, с кроном
 ```
 
+### Запуск роли
+
+```bash
+ansible-playbook playbooks/vpn_deploy.yml
+```
+<br>
+
 ## Бэкап и восстановление
 
-Бэкап запускается ежедневно в **04:00** через systemd-таймер (можно изменить на свое в vars)<br>
+Бэкап запускается ежедневно в **04:00** через systemd-таймер (можно изменить на свое в defaults роли)<br>
 Файлы хранятся в R2 с именем `x-ui-YYYY-MM-DD_HHMMSS.db`
 
 **Запустить бэкап вручную:**

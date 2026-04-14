@@ -5,6 +5,12 @@
     state: present
     update_cache: true
 
+- name: Install Python boto3
+  ansible.builtin.package:
+    name: python3-boto3
+    state: present
+    update_cache: true
+
 - name: Deploy haproxy.cfg
   ansible.builtin.template:
     src: haproxy.cfg.j2
@@ -32,4 +38,3 @@
     creates: /usr/local/x-ui
   changed_when: true
   notify: Restart haproxy service
-  
