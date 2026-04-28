@@ -11,6 +11,24 @@
     state: present
     update_cache: true
 
+- name: Set qdisc
+  ansible.posix.sysctl:
+    name: net.core.default_qdisc
+    value: fq
+    sysctl_set: true
+    state: present
+    reload: true
+  register: qdisc_result
+
+- name: Set BBR
+  ansible.posix.sysctl:
+    name: net.ipv4.tcp_congestion_control
+    value: bbr
+    sysctl_set: true
+    state: present
+    reload: true
+  when: qdisc_result is success
+
 - name: Deploy haproxy.cfg
   ansible.builtin.template:
     src: haproxy.cfg.j2
