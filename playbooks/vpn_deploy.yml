@@ -10,4 +10,4 @@
         xui_control_restore_db: true
         xui_control_install_3xui: true
         xui_control_add_backup_service: true
-        xui_control_set_firewall: false
+        xui_control_set_firewall: true
