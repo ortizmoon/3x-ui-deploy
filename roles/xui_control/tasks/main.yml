@@ -18,3 +18,7 @@
 - name: Add backup service
   ansible.builtin.include_tasks: set_firewall.yml
   when: xui_control_set_firewall | default(false) | bool
+
+- name: Install cloudflare-warp
+  ansible.builtin.include_tasks: install_warp.yml
+  when: xui_control_install_warp | default(false) | bool

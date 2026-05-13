@@ -59,7 +59,7 @@ ansible-galaxy role install ortizmoon.xui_control
 ### Зависимости — коллекции:
 
 ```bash
-ansible-galaxy collection install community.general amazon.aws community.crypto ansible.posix
+ansible-galaxy collection install community.general community.crypto ansible.posix
 ```
 
 <br>
