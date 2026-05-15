@@ -108,48 +108,7 @@ ansible-galaxy collection install community.general community.crypto ansible.pos
 
 <br>
 
-## Пример плейбука
-
-```yaml
-- name: Deploy VPN
-  hosts: vps
-  become: true
-  roles:
-    - role: ortizmoon.xui_control
-      vars:
-        xui_control_deploy_cert: true
-        xui_control_install_3xui: true
-        xui_control_add_backup_service: true
-        xui_control_set_firewall: true
-```
-
-Пример `group_vars/main.yml`:
-
-```yaml
-main_domain: example.com
-xui_panel_domain: panel.example.com
-ssh_domain: connect.example.com
-vless_fake_domain: vk.com
-cf_email: you@example.com
-r2_bucket: my-bucket
-r2_endpoint: https://xxxx.r2.cloudflarestorage.com
-
-firewall_rules:
-  - port: 22
-    proto: tcp
-    comment: ssh
-  - port: 443
-    proto: tcp
-    comment: haproxy
-```
-
-Пример `group_vars/creds.yml`:
-
-```yaml
-cf_api_token: "your_token"
-r2_access_key: "your_key"
-r2_secret_key: "your_secret"
-```
+Примеры `group_vars/main.yml` и `group_vars/creds.yml`, указаны в одноименных шаблонах.
 
 <br>
 
@@ -162,6 +121,13 @@ r2_secret_key: "your_secret"
 
 ```bash
 systemctl start backup-db.service
+```
+<br>
+
+**Восстановить бэкап вручную:**
+
+```bash
+/usr/local/bin/x-ui-restore-r2.sh
 ```
 
 <br>

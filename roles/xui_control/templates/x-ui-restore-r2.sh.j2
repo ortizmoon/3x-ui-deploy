@@ -27,10 +27,10 @@ cleanup() {
 }
 trap cleanup EXIT
 
-log "Downloading ${LATEST} to ${DB_PATH}"
-rm -f "${DB_PATH}"
-rclone copy "${SRC}/${LATEST}" "$(dirname "${DB_PATH}")" \
-  --config "${RCLONE_CONF}"
+log "Wiping ${DB_PATH%/*}"
+rm -f "${DB_PATH%/*}"/*
 
-mv "$(dirname "${DB_PATH}")/${LATEST}" "${DB_PATH}"
+log "Downloading ${LATEST} to ${DB_PATH}"
+rclone copyto "${SRC}/${LATEST}" "${DB_PATH}" \
+  --config "${RCLONE_CONF}"
 log "Restore completed: ${LATEST}"
