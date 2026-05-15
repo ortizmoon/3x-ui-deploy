@@ -11,7 +11,7 @@
 
 
 
-Устанавливает [3X-UI](https://github.com/mhsanaei/3x-ui) за HAProxy L4 балансировщиком,<br> выпускает wildcard TLS-сертификаты через Certbot + Cloudflare DNS-01,<br> настраивает автоматический бэкап базы данных в Cloudflare R2-бакет, настраивает файервол.
+Устанавливает [3X-UI](https://github.com/mhsanaei/3x-ui) за HAProxy L4 балансировщиком,<br> выпускает wildcard TLS-сертификаты через Certbot + Cloudflare DNS-01,<br> настраивает автоматический бэкап базы данных в Cloudflare R2-бакет, настраивает файервол, устанавливает cloudflare-warp для туннелирования запросов до определенных доменов.
 <br>
 ---
 Если у вас уже есть свой ансибл-проект, можно просто установить роль отдельно:
@@ -101,6 +101,8 @@ xui_control_deploy_cert: true         # Создать DNS-записи + вып
 xui_control_install_3xui: true        # Установить haproxy + 3X-UI
 xui_control_restore_db: true         # Восстановить БД из R2 (true только при миграции на другую vps)
 xui_control_add_backup_service: true  # Задеплоить службу в виде скрипта для бэкапа, с кроном
+xui_control_set_firewall: true      # Задать правила файервола
+xui_control_install_warp: true      # Установить и запустить cloudflare-warp
 ```
 
 ### Запуск роли
@@ -113,7 +115,6 @@ ansible-playbook playbooks/vpn_deploy.yml
 ## Бэкап и восстановление
 
 Бэкап запускается ежедневно в **04:00** через systemd-таймер (можно изменить на свое в defaults роли)<br>
-Файлы хранятся в R2 с именем `x-ui-YYYY-MM-DD_HHMMSS.db`
 
 **Запустить бэкап вручную:**
 
