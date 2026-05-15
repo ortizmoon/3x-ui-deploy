@@ -1,132 +1,143 @@
-# Ansible-проект для автоматического развёртывания, или быстрой миграции, VLESS VPN-сервера.
+# xui_control
+
+Ansible-роль для автоматического развёртывания, или быстрой миграции, VLESS VPN-сервера.
+
 ---
+
 <p align="center">
-  <img src="https://img.shields.io/badge/Ansible-automation-EE0000?style=for-the-badge&logo=ansible">
   <img src="https://img.shields.io/badge/3X--UI-VLESS-1E90FF?style=for-the-badge">
   <img src="https://img.shields.io/badge/HAProxy-L4%20SNI%20Router-6A0DAD?style=for-the-badge&logo=haproxy">
   <img src="https://img.shields.io/badge/Cloudflare-DNS--01-F38020?style=for-the-badge&logo=cloudflare">
   <img src="https://img.shields.io/badge/Cloudflare-R2%20Bucket-F38020?style=for-the-badge&logo=cloudflare">
 </p>
 
-
-
-
-Устанавливает [3X-UI](https://github.com/mhsanaei/3x-ui) за HAProxy L4 балансировщиком,<br> выпускает wildcard TLS-сертификаты через Certbot + Cloudflare DNS-01,<br> настраивает автоматический бэкап базы данных в Cloudflare R2-бакет, настраивает файервол, устанавливает cloudflare-warp для туннелирования запросов до определенных доменов.
-<br>
----
-Если у вас уже есть свой ансибл-проект, можно просто установить роль отдельно:
-```
-ansible-galaxy role install ortizmoon.xui_control
-```
+Устанавливает [3X-UI](https://github.com/mhsanaei/3x-ui) за HAProxy L4 балансировщиком,<br>
+выпускает wildcard TLS-сертификаты через Certbot + Cloudflare DNS-01,<br>
+настраивает автоматический бэкап базы данных в Cloudflare R2-бакет, настраивает файервол.
 
 ---
+
 ### Перед запуском роли, уже должно быть:
-- Домен управляется через Claudflare
-- Настроен рут-доступ по ssh, к вашей VPS
+- Домен управляется через Cloudflare
+- Настроен рут-доступ по SSH к вашей VPS
 - Создан Cloudflare R2-бакет + S3-ключи
-- Сгенерирован api-токен для управляемого домена, с правами `Zone:DNS:Edit`
-<br>
+- Сгенерирован API-токен для управляемого домена с правами `Zone:DNS:Edit`
+
 <br>
 
 ## Архитектура
 
-Haproxy маршрутизирует трафик по TLS SNI, с фронта `ft_main:443`, на бэкенды:
+HAProxy маршрутизирует трафик по TLS SNI, с фронта `ft_main:443`, на бэкенды:
 
 ```
-vless_fake_domain --> Xray/VLESS:55555
-xui_panel_domain --> 3X-UI panel:2053
-ssh_domain` --> sshd :22
+vless_fake_domain  -->  Xray/VLESS  :55555
+xui_panel_domain   -->  3X-UI panel :2053
+ssh_domain         -->  sshd        :22
 ```
+
 <br>
 
-После выполнения роли, сервер будет открыт наружу только на порту **443**.<br>
-Поэтому для подключения по ssh, на клиенте рекомендуется настроить примерно такой алиас:
+После выполнения роли сервер будет открыт наружу только на порту **443**.<br>
+Для подключения по SSH на клиенте рекомендуется настроить алиас:
+
 ```
-host vps
-hostname connect.mydomain.com
-port 443
-user root
-proxycommand openssl s_client -connect %h:%p -servername connect.mydomain.com -quiet 2>/dev/null
+Host vps
+  HostName connect.mydomain.com
+  Port 443
+  User root
+  ProxyCommand openssl s_client -connect %h:%p -servername connect.mydomain.com -quiet 2>/dev/null
 ```
+
 <br>
 
-
-
-## Деплой
-
-### Установить коллекции:
+## Установка
 
 ```bash
-ansible-galaxy collection install -r requirements.yml
+ansible-galaxy role install ortizmoon.xui_control
 ```
----
 
-### Отредактировать `inventories/inventory.yml`:
-
-```yaml
-all:
-  children:
-    xui:
-      hosts:
-        xui_server:
-          ansible_host: YOUR_VPS_IP
-          ansible_user: root
-```
----
-
-### Скопировать и задать переменные:
+### Зависимости — коллекции:
 
 ```bash
-cp inventories/group_vars/xui/main.yml.example inventories/group_vars/xui/main.yml
-cp inventories/group_vars/xui/creds.yml.example inventories/group_vars/xui/creds.yml
+ansible-galaxy collection install community.general community.crypto ansible.posix
 ```
 
-**`main.yml`** — основные переменные:
+<br>
+
+## Переменные
+
+### Обязательные (задаются в `group_vars`)
+<br>
+
+**`main.yml`:**
 
 | Переменная | Описание | Пример |
 |---|---|---|
 | `main_domain` | Корневой домен на Cloudflare | `example.com` |
-| `xui_panel_domain` | Поддомен для панели 3x-ui | `panel.example.com` |
-| `ssh_domain` | Поддомен для ssh | `connect.example.com` |
+| `xui_panel_domain` | Поддомен для панели 3X-UI | `panel.example.com` |
+| `ssh_domain` | Поддомен для SSH | `connect.example.com` |
 | `vless_fake_domain` | Маскирующий SNI для VLESS | `vk.com` |
+| `cf_email` | Email аккаунта Cloudflare | `you@example.com` |
+| `r2_bucket` | Имя R2-бакета | `my-bucket` |
+| `r2_endpoint` | URL эндпоинта R2 | `https://xxxx.r2.cloudflarestorage.com` |
+| `firewall_rules` | Список правил UFW | см. ниже |
 
-
-
-### Playbook флаги
-
-В `playbooks/vpn_deploy.yml` управляются через vars роли:
-
-```yaml
-xui_control_deploy_cert: true         # Создать DNS-записи + выпустить wildcard TLS-сертификат
-xui_control_install_3xui: true        # Установить haproxy + 3X-UI
-xui_control_restore_db: true         # Восстановить БД из R2 (true только при миграции на другую vps)
-xui_control_add_backup_service: true  # Задеплоить службу в виде скрипта для бэкапа, с кроном
-xui_control_set_firewall: true      # Задать правила файервола
-xui_control_install_warp: true      # Установить и запустить cloudflare-warp
-```
-
-### Запуск роли
-
-```bash
-ansible-playbook playbooks/vpn_deploy.yml
-```
+<br>
 <br>
 
-## Бэкап и восстановление
+**`creds.yml`** (хранить отдельно, не коммитить):
 
-Бэкап запускается ежедневно в **04:00** через systemd-таймер (можно изменить на свое в defaults роли)<br>
+| Переменная | Описание |
+|---|---|
+| `cf_api_token` | Cloudflare API-токен |
+| `r2_access_key` | R2 Access Key |
+| `r2_secret_key` | R2 Secret Key |
+
+<br>
+
+### Флаги задач (по умолчанию `false`)
+
+| Переменная | Описание |
+|---|---|
+| `xui_control_deploy_cert` | Создать DNS-записи + выпустить wildcard TLS-сертификат |
+| `xui_control_install_3xui` | Установить HAProxy + 3X-UI |
+| `xui_control_restore_db` | Восстановить БД из R2 (только при миграции) |
+| `xui_control_add_backup_service` | Задеплоить systemd-службу бэкапа с таймером |
+| `xui_control_set_firewall` | Настроить UFW |
+
+
+<br>
+
+Примеры `group_vars/main.yml` и `group_vars/creds.yml`, указаны в одноименных шаблонах.
+
+<br>
+
+## Бэкап и восстановление vless конфигов
+
+Бэкап запускается ежедневно в **04:00** через systemd-таймер.<br>
+Файлы хранятся в R2 с именем `x-ui-YYYY-MM-DD_HHMMSS.db`.
 
 **Запустить бэкап вручную:**
 
 ```bash
 systemctl start backup-db.service
 ```
+<br>
+
+**Восстановить бэкап вручную:**
+
+```bash
+/usr/local/bin/x-ui-restore-r2.sh
+```
+
+<br>
 
 ## Обновление сертификата
 
-Certbot обновляет сертификат автоматически.<br> После каждого обновления хук
-`/etc/letsencrypt/renewal-hooks/deploy/renewal-hook.sh` пересобирает `bundle.pem`
-и перезагружает haproxy.
+Certbot обновляет сертификат автоматически.<br>
+После каждого обновления хук `/etc/letsencrypt/renewal-hooks/deploy/renewal-hook.sh` пересобирает `bundle.pem` и перезагружает HAProxy.
+
+<br>
 
 ## Лицензия
 
