@@ -8,7 +8,7 @@ RCLONE_CONF=/root/.config/rclone/rclone.conf
 log() { echo "$(date '+%Y-%m-%d %H:%M:%S') $*"; }
 
 log "Listing backups in ${SRC}"
-LATEST=$(rclone ls "${SRC}" --include "*.db" --config "${RCLONE_CONF}" | sort | tail -1 | awk '{print $2}')
+LATEST=$(rclone ls "${SRC}" --include "**.db" --config "${RCLONE_CONF}" | sort -t/ -k2 | tail -1 | awk '{print $2}')
 
 if [ -z "${LATEST}" ]; then
   log "ERROR: no backups found in ${SRC}"

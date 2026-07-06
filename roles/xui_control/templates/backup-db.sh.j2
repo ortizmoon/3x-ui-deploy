@@ -3,7 +3,7 @@ set -euo pipefail
 
 FILENAME="x-ui-$(date '+%Y-%m-%d_%H%M%S').db"
 DB_PATH="{{ xui_control_db_path }}"
-DEST="r2:{{ r2_bucket }}"
+DEST="r2:{{ r2_bucket }}/{{ ansible_host }}"
 
 log() { echo "$(date '+%Y-%m-%d %H:%M:%S') $*"; }
 
